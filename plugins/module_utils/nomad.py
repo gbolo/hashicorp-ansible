@@ -1,0 +1,109 @@
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
+import json
+import traceback
+import copy
+import sys
+
+from datetime import datetime, timedelta
+
+from ansible.module_utils.urls import open_url
+from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.common.text.converters import to_native
+
+URL_ACL_POLICIES = "{url}/v1/acl/policies"
+URL_ACL_POLICY = "{url}/v1/acl/policy/{name}"
+
+class ModuleTest(object):
+    def __init__(self, data):
+        self.params = data
+    def fail_json(self, msg):
+        print(msg)
+        sys.exit(1)
+
+
+class NomadAPI(object):
+    """ NomadAPI is used to interact with the nomad API
+    """
+    def __init__(self, module):
+        self.module = module
+        self.url = self.module.params.get('url')
+        self.management_token = self.module.params.get('management_token')
+        self.validate_certs = self.module.params.get('validate_certs')
+        self.connection_timeout = self.module.params.get('connection_timeout')
+        self.headers = {
+            "Content-Type": "application/json",
+            "X-Nomad-Token": self.management_token,
+            "User-Agent": "ansible-module-nomad"
+        }
+
+    def api_request(self, url, method, headers=None, body=None, json_response=True, accept_404=False):
+        if headers is None:
+            headers = self.headers
+        try:
+            response = open_url(
+                url=url,
+                method=method,
+                data=body,
+                headers=headers,
+                timeout=self.connection_timeout,
+                validate_certs=self.validate_certs
+            )
+            # print("{method} {url} -> {status}".format(method=method, url=url, status=response.getcode()))
+            if json_response:
+                try:
+                    return json.loads(to_native(response.read()))
+                except ValueError as e:
+                    self.module.fail_json(msg='API returned invalid JSON: %s'
+                                            % (str(e)))
+            return response.read().decode('utf-8')
+        
+        except HTTPError as e:
+            if e.code == 401 or e.code == 403:
+                self.module.fail_json(msg='Not Authorized: status=%s [%s] %s ->\n%s'
+                                          % (e.code, method, url, e.read().decode('utf-8')))
+            if e.code == 404 and accept_404:
+                return None
+            
+            self.module.fail_json(msg='Error: status=%s [%s] %s ->\n%s'
+                                          % (e.code, method, url, e.read().decode('utf-8')))
+            
+        except Exception as e:
+            print('here')
+            self.module.fail_json(msg='Could not make API call: [%s] %s ->\n%s'
+                                          % (method, url, str(e)))
+
+    #
+    # ACL Policies
+    #
+    def get_acl_policies(self):
+        return self.api_request(
+            url=URL_ACL_POLICIES.format(url=self.url),
+            method='GET',
+            json_response=True,
+        )
+    
+    def get_acl_policy(self, policy_name):
+        return self.api_request(
+            url=URL_ACL_POLICY.format(url=self.url, name=policy_name),
+            method='GET',
+            json_response=True,
+            accept_404=True,
+        )
+    
+    def delete_acl_policy(self, policy_name):
+        return self.api_request(
+            url=URL_ACL_POLICY.format(url=self.url, name=policy_name),
+            method='DELETE',
+            json_response=False,
+            accept_404=True,
+        ) 
+
+    def create_or_update_acl_policy(self, policy_name, body):
+        return self.api_request(
+            url=URL_ACL_POLICY.format(url=self.url, name=policy_name),
+            method='POST',
+            body=body,
+            json_response=False,
+        )
