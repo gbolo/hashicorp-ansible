@@ -14,6 +14,9 @@ from ansible.module_utils.common.text.converters import to_native
 
 URL_ACL_POLICIES = "{url}/v1/acl/policies"
 URL_ACL_POLICY = "{url}/v1/acl/policy/{name}"
+URL_ACL_TOKENS = "{url}/v1/acl/tokens"
+URL_ACL_TOKEN = "{url}/v1/acl/token"
+URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
 
 class ModuleTest(object):
     def __init__(self, data):
@@ -106,4 +109,51 @@ class NomadAPI(object):
             method='POST',
             body=body,
             json_response=False,
+        )
+
+    #
+    # ACL Tokens
+    #
+    def get_acl_tokens(self):
+        return self.api_request(
+            url=URL_ACL_TOKENS.format(url=self.url),
+            method='GET',
+            json_response=True,
+        )
+    
+    def get_acl_token(self, accessor_id):
+        return self.api_request(
+            url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
+            method='GET',
+            json_response=True,
+            accept_404=True,
+        )
+    
+    def find_acl_token_by_name(self, name):
+        for token in self.get_acl_tokens():
+            if token.get('Name') == name:
+                return self.get_acl_token(token.get('AccessorID'))
+    
+    def delete_acl_token(self, accessor_id):
+        return self.api_request(
+            url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
+            method='DELETE',
+            json_response=False,
+            accept_404=True,
+        )
+    
+    def create_acl_token(self, body):
+        return self.api_request(
+            url=URL_ACL_TOKEN.format(url=self.url),
+            method='POST',
+            body=body,
+            json_response=True,
+        )
+    
+    def update_acl_token(self, accessor_id, body):
+        return self.api_request(
+            url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
+            method='POST',
+            body=body,
+            json_response=True,
         )
