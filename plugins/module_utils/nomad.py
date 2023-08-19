@@ -17,6 +17,8 @@ URL_ACL_POLICY = "{url}/v1/acl/policy/{name}"
 URL_ACL_TOKENS = "{url}/v1/acl/tokens"
 URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
+URL_ACL_TOKEN_SELF = "{url}/v1/acl/token/self"
+URL_ACL_BOOTSTRAP = "{url}/v1/acl/bootstrap"
 
 class ModuleTest(object):
     def __init__(self, data):
@@ -155,5 +157,21 @@ class NomadAPI(object):
             url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
             method='POST',
             body=body,
+            json_response=True,
+        )
+    
+    def get_self_token(self):
+        return self.api_request(
+            url=URL_ACL_TOKEN_SELF.format(url=self.url),
+            method='GET',
+            json_response=True,
+            accept_404=True,
+        )
+    
+    def acl_bootstrap(self):
+        return self.api_request(
+            url=URL_ACL_BOOTSTRAP.format(url=self.url),
+            method='POST',
+            body=json.dumps(dict(BootstrapSecret=self.management_token)),
             json_response=True,
         )
