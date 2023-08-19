@@ -40,7 +40,7 @@ def run_module():
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
 
-    existing_config = nomad.get_scheduler_config()
+    existing_config = nomad.get_scheduler_config().get('SchedulerConfig')
     desired_config = dict(
         SchedulerAlgorithm=module.params.get("scheduler_algorithm"),
         MemoryOversubscriptionEnabled=module.params.get("memory_oversubscription_enabled"),
@@ -56,7 +56,8 @@ def run_module():
     if not is_subset(desired_config, existing_config):
         nomad.update_scheduler_config(json.dumps(desired_config))
         result["changed"] = True
-    
+  
+    result["scheduler_config"] = desired_config
     module.exit_json(**result)
 
 
