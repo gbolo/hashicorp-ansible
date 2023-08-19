@@ -84,13 +84,13 @@ def run_module():
             result["changed"] = True
 
     if module.params.get("state") == "present":
-        # NOTE: remember we cannot modify existing CSI volumes
+        # NOTE: remember we cannot modify existing CSI volumes.
         #       simply report the mismatch.
         if existing_volume is not None:
             if not is_subset(desired_volume, existing_volume):
                 result["mismatched"] = True
         else:
-            result['volume'] = nomad.create_csi_volume(desired_volume)
+            result['volume'] = nomad.create_csi_volume(json.dumps(desired_volume))
             result["changed"] = True
 
     # post final results
