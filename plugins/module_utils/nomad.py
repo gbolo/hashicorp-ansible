@@ -22,6 +22,10 @@ URL_ACL_BOOTSTRAP = "{url}/v1/acl/bootstrap"
 URL_NAMESPACES = "{url}/v1/namespaces"
 URL_NAMESPACE = "{url}/v1/namespace/{name}"
 URL_OPERATOR_SCHEDULER = "{url}/v1/operator/scheduler/configuration"
+URL_CSI_VOLUMES = "{url}/v1/volumes?type=csi"
+URL_CSI_VOLUME = "{url}/v1/volume/csi/{id}"
+URL_CSI_VOLUME_CREATE = "{url}/v1/volume/csi/{id}/create"
+URL_CSI_VOLUME_DELETE = "{url}/v1/volume/csi/{id}/delete"
 
 class ModuleTest(object):
     def __init__(self, data):
@@ -226,6 +230,38 @@ class NomadAPI(object):
     def update_scheduler_config(self, body):
         return self.api_request(
             url=URL_OPERATOR_SCHEDULER.format(url=self.url),
+            method='PUT',
+            body=body,
+            json_response=True,
+        )
+    
+    #
+    # CSI Volumes
+    #
+    def get_csi_volumes(self):
+        return self.api_request(
+            url=URL_CSI_VOLUMES.format(url=self.url),
+            method='GET',
+            json_response=True,
+        )
+    
+    def get_csi_volume(self, id):
+        return self.api_request(
+            url=URL_CSI_VOLUME.format(url=self.url, id=id),
+            method='GET',
+            json_response=True,
+        )
+    
+    def delete_csi_volume(self, id):
+        return self.api_request(
+            url=URL_CSI_VOLUME_DELETE.format(url=self.url, id=id),
+            method='DELETE',
+            json_response=True,
+        )
+    
+    def create_csi_volume(self, id, body):
+        return self.api_request(
+            url=URL_CSI_VOLUME_CREATE.format(url=self.url, id=id),
             method='PUT',
             body=body,
             json_response=True,
