@@ -26,6 +26,11 @@ URL_CSI_VOLUMES = "{url}/v1/volumes?type=csi"
 URL_CSI_VOLUME = "{url}/v1/volume/csi/{id}"
 URL_CSI_VOLUME_CREATE = "{url}/v1/volume/csi/{id}/create"
 URL_CSI_VOLUME_DELETE = "{url}/v1/volume/csi/{id}/delete"
+URL_JOBS = "{url}/v1/jobs"
+URL_JOB = "{url}/v1/job/{id}"
+URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}"
+URL_JOB_PARSE = "{url}/v1/jobs/parse"
+URL_JOB_PLAN = "{url}/v1/job/{id}/plan"
 
 class ModuleTest(object):
     def __init__(self, data):
@@ -265,4 +270,46 @@ class NomadAPI(object):
             method='PUT',
             body=body,
             json_response=True,
+        )
+    
+    #
+    # Jobs
+    #
+    def parse_job(self, body):
+        return self.api_request(
+            url=URL_JOB_PARSE.format(url=self.url),
+            method='POST',
+            body=body,
+            json_response=True,
+        )
+    
+    def plan_job(self, id, body):
+        return self.api_request(
+            url=URL_JOB_PLAN.format(url=self.url, id=id),
+            method='POST',
+            body=body,
+            json_response=True,
+        )
+    
+    def delete_job(self, id, purge=False):
+        return self.api_request(
+            url=URL_JOB_DELETE.format(url=self.url, id=id, purge=purge),
+            method='DELETE',
+            json_response=True,
+        )
+    
+    def create_or_update_job(self, id, body):
+        return self.api_request(
+            url=URL_JOB.format(url=self.url, id=id),
+            method='POST',
+            body=body,
+            json_response=True,
+        )
+    
+    def get_job(self, id, namespace="default"):
+        return self.api_request(
+            url=URL_JOB.format(url=self.url, id=id),
+            method='GET',
+            json_response=True,
+            accept_404=True,
         )
