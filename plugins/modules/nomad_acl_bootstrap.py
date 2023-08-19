@@ -10,7 +10,6 @@ import json
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
-        state=dict(type="str", choices=["present", "absent"], default="present"),
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),

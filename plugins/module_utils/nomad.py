@@ -19,6 +19,8 @@ URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
 URL_ACL_TOKEN_SELF = "{url}/v1/acl/token/self"
 URL_ACL_BOOTSTRAP = "{url}/v1/acl/bootstrap"
+URL_NAMESPACES = "{url}/v1/namespaces"
+URL_NAMESPACE = "{url}/v1/namespace/{name}"
 
 class ModuleTest(object):
     def __init__(self, data):
@@ -174,4 +176,38 @@ class NomadAPI(object):
             method='POST',
             body=json.dumps(dict(BootstrapSecret=self.management_token)),
             json_response=True,
+        )
+
+    #
+    # Namespaces
+    #
+    def get_namespaces(self):
+        return self.api_request(
+            url=URL_NAMESPACES.format(url=self.url),
+            method='GET',
+            json_response=True,
+        )
+    
+    def get_namespace(self, name):
+        return self.api_request(
+            url=URL_NAMESPACE.format(url=self.url, name=name),
+            method='GET',
+            json_response=True,
+            accept_404=True,
+        )
+    
+    def delete_namespace(self, name):
+        return self.api_request(
+            url=URL_NAMESPACE.format(url=self.url, name=name),
+            method='DELETE',
+            json_response=False,
+            accept_404=True,
+        )
+    
+    def create_or_update_namespace(self, name, body):
+        return self.api_request(
+            url=URL_NAMESPACE.format(url=self.url, name=name),
+            method='POST',
+            body=body,
+            json_response=False,
         )
