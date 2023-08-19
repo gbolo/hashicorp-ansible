@@ -21,6 +21,7 @@ URL_ACL_TOKEN_SELF = "{url}/v1/acl/token/self"
 URL_ACL_BOOTSTRAP = "{url}/v1/acl/bootstrap"
 URL_NAMESPACES = "{url}/v1/namespaces"
 URL_NAMESPACE = "{url}/v1/namespace/{name}"
+URL_OPERATOR_SCHEDULER = "{url}/v1/operator/scheduler/configuration"
 
 class ModuleTest(object):
     def __init__(self, data):
@@ -210,4 +211,22 @@ class NomadAPI(object):
             method='POST',
             body=body,
             json_response=False,
+        )
+    
+    #
+    # Operator
+    #
+    def get_scheduler_config(self):
+        return self.api_request(
+            url=URL_OPERATOR_SCHEDULER.format(url=self.url),
+            method='GET',
+            json_response=True,
+        )
+    
+    def update_scheduler_config(self, body):
+        return self.api_request(
+            url=URL_OPERATOR_SCHEDULER.format(url=self.url),
+            method='PUT',
+            body=body,
+            json_response=True,
         )
