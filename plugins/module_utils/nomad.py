@@ -2,11 +2,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-import traceback
-import copy
 import sys
-
-from datetime import datetime, timedelta
 
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError

@@ -44,20 +44,7 @@ class ConsulAPI(object):
             "User-Agent": "ansible-module-consul"
         }
 
-    def construct_body(self):
-        return del_none(dict(
-            AccessorID=self.module.params.get('accessor_id'),
-            Description=self.module.params.get('description'),
-            ExpirationTime=self.module.params.get('expiration_time'),
-            ExpirationTTL=self.module.params.get('expiration_ttl'),
-            Local=self.module.params.get('local'),
-            Policies=self.module.params.get('policies'),
-            Roles=self.module.params.get('roles'),
-            SecretID=self.module.params.get('secret_id'),
-            ServiceIdentities=self.module.params.get('service_identities'),
-        ))
-
-    def api_request(self, url, method, headers=None, body=None, json_response=True, accept_404=False):
+    def api_request(self, url, method, headers=None, body=None, json_response=True, ignore_codes=[]):
         if headers is None:
             headers = self.headers
         try:
@@ -79,11 +66,12 @@ class ConsulAPI(object):
             return response.read().decode('utf-8')
         
         except HTTPError as e:
+            if e.code in ignore_codes:
+                return None
+            
             if e.code == 401 or e.code == 403:
                 self.module.fail_json(msg='Not Authorized: status=%s [%s] %s ->\n%s'
                                           % (e.code, method, url, e.read().decode('utf-8')))
-            if e.code == 404 and accept_404:
-                return None
             
             self.module.fail_json(msg='Error: status=%s [%s] %s ->\n%s'
                                           % (e.code, method, url, e.read().decode('utf-8')))
@@ -108,7 +96,7 @@ class ConsulAPI(object):
             url=URL_ACL_POLICY_ID.format(url=self.url, id=policy_id),
             method='GET',
             json_response=True,
-            accept_404=True,
+            ignore_codes=[404],
         )
 
     def get_acl_policy_by_name(self, policy_name):
@@ -116,7 +104,7 @@ class ConsulAPI(object):
             url=URL_ACL_POLICY_NAME.format(url=self.url, name=policy_name),
             method='GET',
             json_response=True,
-            accept_404=True,
+            ignore_codes=[404],
         )
     
     def delete_acl_policy(self, policy_id):
@@ -124,7 +112,7 @@ class ConsulAPI(object):
             url=URL_ACL_POLICY_ID.format(url=self.url, id=policy_id),
             method='DELETE',
             json_response=False,
-            accept_404=True,
+            ignore_codes=[404],
         ) 
 
     def create_acl_policy(self, body):
@@ -159,7 +147,10 @@ class ConsulAPI(object):
             url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
             method='GET',
             json_response=True,
-            accept_404=True,
+            # for some reason, consul api returns 403 if token not found...
+            # despite the actual response body revealing it could not find
+            # the token ;)
+            ignore_codes=[403],
         )
     
     def delete_acl_token(self, accessor_id):
@@ -167,7 +158,7 @@ class ConsulAPI(object):
             url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
             method='DELETE',
             json_response=False,
-            accept_404=True,
+            ignore_codes=[404],
         )
     
     def create_acl_token(self, body):
@@ -185,47 +176,3 @@ class ConsulAPI(object):
             body=body,
             json_response=True,
         )
-    
-    def ensure_acl_token(self):
-        result = dict(
-            changed=False
-        )
-        # if an accessor_id is defined, try to find the token
-        accessor_id = self.module.params.get('accessor_id')
-        if accessor_id is not None:
-            existing_token = self.get_acl_token(accessor_id)
-
-        # delete token only when it exists
-        if self.module.params.get('state') == "absent":
-            if existing_token is None or accessor_id is None:
-                return result
-            else:
-                self.delete_acl_token(accessor_id)
-                result['changed'] == True
-                return result
-
-        # decide to create a token if accessor_id is not set
-        # or one does not already exsit
-        if accessor_id is None or existing_token is None:
-            result['token'] = self.create_acl_token(json.dumps(self.construct_body()))
-            result['changed'] = True
-            return result
-        
-        # if a token exists we need to compare it with the
-        # provided specs to decide if we need to update it
-        check_token = dict(
-            AccessorID=existing_token.get("AccessorID"),
-            Description=existing_token.get("Description"),
-            Local=existing_token.get("Local"),
-            Policies=existing_token.get("Policies"),
-            Roles=existing_token.get("Roles"),
-            SecretID=existing_token.get("SecretID"),
-            ServiceIdentities=existing_token.get("ServiceIdentities"),
-        )
-
-        for key, value in self.construct_body().items():
-            if not "expiration" in key and check_token[key] != value:
-                result['token'] = self.update_acl_token(accessor_id, json.dumps(self.construct_body()))
-                result['changed'] = True
-
-        return result
