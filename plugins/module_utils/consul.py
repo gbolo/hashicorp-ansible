@@ -5,20 +5,8 @@ import json
 
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.six.moves.urllib.parse import quote_plus
 from ansible.module_utils.common.text.converters import to_native
-
-def del_none(d):
-    """
-    Delete keys with the value ``None`` in a dictionary, recursively.
-    Returns a copy of the input d.
-    """
-    cloned = d.copy()
-    for key, value in list(cloned.items()):
-        if value is None:
-            del cloned[key]
-        elif isinstance(value, dict):
-            del_none(value)
-    return cloned
 
 URL_ACL_POLICIES = "{url}/v1/acl/policies"
 URL_ACL_POLICY_ID = "{url}/v1/acl/policy/{id}"
@@ -27,10 +15,10 @@ URL_ACL_POLICY_CREATE = "{url}/v1/acl/policy"
 URL_ACL_TOKENS = "{url}/v1/acl/tokens"
 URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
-
+URL_CONNECT_INTENTION = "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
 
 class ConsulAPI(object):
-    """ ConsulAPI is used to interact with the consul API
+    """ ConsulAPI is used to interact with the Consul API
     """
     def __init__(self, module):
         self.module = module
@@ -172,6 +160,46 @@ class ConsulAPI(object):
     def update_acl_token(self, accessor_id, body):
         return self.api_request(
             url=URL_ACL_TOKEN_ID.format(url=self.url,id=accessor_id),
+            method='PUT',
+            body=body,
+            json_response=True,
+        )
+    
+    #
+    # CONNECT INTENTIONS
+    #
+
+    def get_connect_intention(self, source, destination):
+        return self.api_request(
+            url=URL_CONNECT_INTENTION.format(
+                url=self.url,
+                src=quote_plus(source),
+                dst=quote_plus(destination),
+            ),
+            method='GET',
+            json_response=True,
+            ignore_codes=[404],
+        )
+    
+    def delete_connect_intention(self, source, destination):
+        return self.api_request(
+            url=URL_CONNECT_INTENTION.format(
+                url=self.url,
+                src=quote_plus(source),
+                dst=quote_plus(destination),
+            ),
+            method='DELETE',
+            json_response=True,
+            ignore_codes=[404],
+        )
+    
+    def create_or_update_connect_intention(self, source, destination, body):
+        return self.api_request(
+            url=URL_CONNECT_INTENTION.format(
+                url=self.url,
+                src=quote_plus(source),
+                dst=quote_plus(destination),
+            ),
             method='PUT',
             body=body,
             json_response=True,
