@@ -1,0 +1,34 @@
+- name: bootstrap
+  register: _nomad_acl_bootstrap_valid
+  nomad_acl_bootstrap:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+
+- name: ensure token bootstrap changed
+  ansible.builtin.assert:
+    that:
+      - _nomad_acl_bootstrap_valid.changed
+
+- name: bootstrap again with a different token
+  register: _nomad_acl_bootstrap_invalid
+  nomad_acl_bootstrap:
+    url: "{{ nomad_url }}"
+    # this token should be invalid
+    management_token: "1140349b-5051-2739-94f3-dd8ec4a3464d"
+  ignore_errors: true
+
+- name: ensure invalid token bootstrap failed
+  ansible.builtin.assert:
+    that:
+      - _nomad_acl_bootstrap_invalid.failed
+
+- name: bootstrap
+  register: _nomad_acl_bootstrap_valid
+  nomad_acl_bootstrap:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+
+- name: idempotent - ensure token bootstrap has not changed
+  ansible.builtin.assert:
+    that:
+      - not _nomad_acl_bootstrap_valid.changed

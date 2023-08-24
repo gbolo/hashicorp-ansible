@@ -1,0 +1,40 @@
+---
+scenario:
+  # https://github.com/ansible/molecule/blob/7405c59109c715d0d8f1c42791108714fa6c930b/molecule/kubevirt/molecule.yml#L36
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - converge
+    - destroy
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: nomad-molecule
+    image: hashicorp/nomad:1.6.1
+    pre_build_image: False
+    tty: True
+    override_command: True
+    command: agent -dev -acl-enabled -bind 0.0.0.0
+    published_ports:
+      - 127.0.0.1:14646:4646
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      stdout_callback: debug
+  env:
+    ANSIBLE_LIBRARY: ../../../plugins/modules
+    ANSIBLE_MODULE_UTILS: ../../../plugins/module_utils
+    ANSIBLE_ROLES_PATH: ../../../roles
+  playbooks:
+    converge: ${MOLECULE_PLAYBOOK:-test_cases.yml}
+verifier:
+  name: ansible
+lint: |
+  set -e
+  yamllint -c ${MOLECULE_PROJECT_DIRECTORY}/../../.yamllint .
+  ansible-lint -c ${MOLECULE_PROJECT_DIRECTORY}/../../.ansible-lint .

@@ -1,0 +1,88 @@
+- set_fact:
+    random_name: "{{ 1024 | random | hash('sha1') }}"
+    random_description: "{{ 1024 | random | hash('sha1') }}"
+    another_random_description: "{{ 1024 | random | hash('sha1') }}"
+
+- name: create new nomad acl policy
+  register: _nomad_acl_policy
+  nomad_acl_policy:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    description: "{{ random_description }}"
+    rules: |
+      namespace "default" {
+        policy = "deny"
+        capabilities = []
+      }
+
+- debug:
+    var: _nomad_acl_policy.policy
+
+- ansible.builtin.assert:
+    that:
+      - _nomad_acl_policy.changed
+      - _nomad_acl_policy.policy.Name == random_name
+      - _nomad_acl_policy.policy.Description == random_description
+
+- name: update nomad acl policy
+  register: _nomad_acl_policy
+  nomad_acl_policy:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    description: "{{ another_random_description }}"
+    rules: |
+      namespace "default" {
+        policy = "deny"
+        capabilities = []
+      }
+
+- ansible.builtin.assert:
+    that:
+      - _nomad_acl_policy.changed
+      - _nomad_acl_policy.policy.Name == random_name
+      - _nomad_acl_policy.policy.Description == another_random_description
+
+- name: idempotent - no change in nomad acl policy
+  register: _nomad_acl_policy
+  nomad_acl_policy:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    description: "{{ another_random_description }}"
+    rules: |
+      namespace "default" {
+        policy = "deny"
+        capabilities = []
+      }
+
+- ansible.builtin.assert:
+    that:
+      - not _nomad_acl_policy.changed
+      - _nomad_acl_policy.policy.Name == random_name
+      - _nomad_acl_policy.policy.Description == another_random_description
+
+- name: delete nomad acl policy
+  register: _nomad_acl_policy
+  nomad_acl_policy:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    state: absent    
+
+- ansible.builtin.assert:
+    that:
+      - _nomad_acl_policy.changed
+
+- name: idempotent - delete nomad acl policy again
+  register: _nomad_acl_policy
+  nomad_acl_policy:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    state: absent    
+
+- ansible.builtin.assert:
+    that:
+      - not _nomad_acl_policy.changed

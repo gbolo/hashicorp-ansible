@@ -1,0 +1,31 @@
+---
+- name: Converge
+  hosts: localhost
+  gather_facts: False
+  vars:
+    nomad_url: http://127.0.0.1:14646
+
+  tasks:
+    - set_fact:
+        # randomize the token for every test
+        nomad_management_token: "{{ 1024 | random | to_uuid }}"
+
+    - name: display nomad_management_token
+      debug:
+        var: nomad_management_token
+
+    - name: wait until nomad api has leader
+      ansible.builtin.uri:
+        url: "{{ nomad_url }}/v1/status/leader"
+      register: result
+      until: "result.status == 200"
+      retries: 5
+      delay: 10
+
+    # run the various test cases for each module
+    - ansible.builtin.include_tasks: test_{{ item }}.yml
+      loop:
+        - nomad_acl_bootstrap
+        - nomad_acl_policy
+
+
