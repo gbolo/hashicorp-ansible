@@ -24,7 +24,7 @@ def run_module():
         ),
         name=dict(type="str", required=True),
         description=dict(type="str"),
-        rules=dict(type="str", required=True),
+        rules=dict(type="str"),
         job_acl=dict(type="dict", default={}, options=job_acl_spec),
     )
     
@@ -34,7 +34,11 @@ def run_module():
     )
 
     # the AnsibleModule object
-    module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
+    module = AnsibleModule(
+        argument_spec=module_args,
+        supports_check_mode=False,
+        required_if=[('state', 'present', ('rules',))],
+    )
 
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
@@ -62,16 +66,18 @@ def run_module():
 
     if module.params.get("state") == "present":
         if existing_policy is None:
-            result["policy"] = nomad.create_or_update_acl_policy(
+            nomad.create_or_update_acl_policy(
                 policy_name, json.dumps(desired_policy_body)
             )
+            result["policy"] = nomad.get_acl_policy(policy_name)
             result["changed"] = True
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                result["policy"] = nomad.create_or_update_acl_policy(
+                nomad.create_or_update_acl_policy(
                     policy_name, json.dumps(desired_policy_body)
                 )
+                result["policy"] = nomad.get_acl_policy(policy_name)
                 result["changed"] = True
 
     # post final results
