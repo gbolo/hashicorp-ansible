@@ -1,3 +1,6 @@
+# Copyright (c) George Bolo <gbolo@linuxctl.com>
+# SPDX-License-Identifier: MIT
+
 ---
 scenario:
   # https://github.com/ansible/molecule/blob/7405c59109c715d0d8f1c42791108714fa6c930b/molecule/kubevirt/molecule.yml#L36

@@ -1,3 +1,6 @@
+# Copyright (c) George Bolo <gbolo@linuxctl.com>
+# SPDX-License-Identifier: MIT
+
 - set_fact:
     random_name: "{{ 1024 | random | hash('sha1') }}"
     random_description: "{{ 1024 | random | hash('sha1') }}"

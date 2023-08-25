@@ -9,6 +9,14 @@ PR = poetry run
 default:
 	set -euo pipefail
 
+.PHONY: check-copywrite-headers
+check-copywrite-headers: default
+	copywrite headers --spdx "MIT" --plan
+
+.PHONY: apply-copywrite-headers
+apply-copywrite-headers: default
+	copywrite headers --spdx "MIT"
+
 .PHONY: dependency
 dependency: default
 	poetry env info
@@ -23,3 +31,4 @@ test-nomad-modules: default
 	cd extensions && $(PR) molecule list --scenario-name nomad_modules
 	cd extensions && $(PR) molecule converge --scenario-name nomad_modules
 	cd extensions && $(PR) molecule destroy --scenario-name nomad_modules
+

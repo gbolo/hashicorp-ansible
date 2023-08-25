@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# Copyright (c) George Bolo <gbolo@linuxctl.com>
+# SPDX-License-Identifier: MIT
+
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
 from ansible.module_utils.nomad import NomadAPI

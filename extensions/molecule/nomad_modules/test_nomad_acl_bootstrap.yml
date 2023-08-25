@@ -1,3 +1,6 @@
+# Copyright (c) George Bolo <gbolo@linuxctl.com>
+# SPDX-License-Identifier: MIT
+
 - name: bootstrap
   register: _nomad_acl_bootstrap_valid
   nomad_acl_bootstrap:
