@@ -4,8 +4,8 @@
 
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible.module_utils.nomad import NomadAPI
-from ansible.module_utils.utils import del_none, is_subset
+from ..module_utils.nomad import NomadAPI
+from ..module_utils.utils import del_none, is_subset
 
 import json
 
@@ -93,7 +93,10 @@ def run_module():
             if not is_subset(desired_volume, existing_volume):
                 result["mismatched"] = True
         else:
-            result['volume'] = nomad.create_csi_volume(json.dumps(desired_volume))
+            request_body = {
+                "Volumes": [desired_volume]
+            }
+            result['volume'] = nomad.create_csi_volume(volume_id, json.dumps(request_body))
             result["changed"] = True
 
     # post final results

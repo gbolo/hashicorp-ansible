@@ -31,14 +31,6 @@ URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}"
 URL_JOB_PARSE = "{url}/v1/jobs/parse"
 URL_JOB_PLAN = "{url}/v1/job/{id}/plan"
 
-class ModuleTest(object):
-    def __init__(self, data):
-        self.params = data
-    def fail_json(self, msg):
-        print(msg)
-        sys.exit(1)
-
-
 class NomadAPI(object):
     """ NomadAPI is used to interact with the nomad API
     """
@@ -66,7 +58,6 @@ class NomadAPI(object):
                 timeout=self.connection_timeout,
                 validate_certs=self.validate_certs
             )
-            # print("{method} {url} -> {status}".format(method=method, url=url, status=response.getcode()))
             if json_response:
                 try:
                     return json.loads(to_native(response.read()))
@@ -86,7 +77,6 @@ class NomadAPI(object):
                                           % (e.code, method, url, e.read().decode('utf-8')))
             
         except Exception as e:
-            print('here')
             self.module.fail_json(msg='Could not make API call: [%s] %s ->\n%s'
                                           % (method, url, str(e)))
 
@@ -254,6 +244,7 @@ class NomadAPI(object):
             url=URL_CSI_VOLUME.format(url=self.url, id=id),
             method='GET',
             json_response=True,
+            accept_404=True,
         )
     
     def delete_csi_volume(self, id):
@@ -261,6 +252,7 @@ class NomadAPI(object):
             url=URL_CSI_VOLUME_DELETE.format(url=self.url, id=id),
             method='DELETE',
             json_response=True,
+            accept_404=True,
         )
     
     def create_csi_volume(self, id, body):
