@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.nomad import NomadAPI
 from ..module_utils.utils import del_none
-
-import json
 
 
 def run_module():
@@ -16,9 +17,7 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
         namespace=dict(type="str", default="default"),
         hcl_spec=dict(type="str", required=True),
     )
@@ -34,11 +33,17 @@ def run_module():
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
 
-    result["parsed"] = nomad.parse_job(json.dumps(del_none(dict(
-        namespace=module.params.get("namespace"),
-        JobHCL=module.params.get("hcl_spec"),
-    ))))
-    
+    result["parsed"] = nomad.parse_job(
+        json.dumps(
+            del_none(
+                dict(
+                    namespace=module.params.get("namespace"),
+                    JobHCL=module.params.get("hcl_spec"),
+                )
+            )
+        )
+    )
+
     module.exit_json(**result)
 
 

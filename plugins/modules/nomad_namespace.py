@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.nomad import NomadAPI
 from ..module_utils.utils import del_none, is_subset
-
-import json
 
 
 def run_module():
@@ -17,9 +18,7 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
         name=dict(type="str", required=True),
         description=dict(type="str"),
         meta=dict(type="str"),
@@ -36,19 +35,21 @@ def run_module():
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
 
-    existing_namespace = nomad.get_namespace(module.params.get('name'))
-    desired_namespace = del_none(dict(
-        Name=module.params.get('name'),
-        Description=module.params.get('description'),
-        Meta=module.params.get('meta'),
-        Capabilities=module.params.get('capabilities'),
-    ))
+    existing_namespace = nomad.get_namespace(module.params.get("name"))
+    desired_namespace = del_none(
+        dict(
+            Name=module.params.get("name"),
+            Description=module.params.get("description"),
+            Meta=module.params.get("meta"),
+            Capabilities=module.params.get("capabilities"),
+        )
+    )
 
     if module.params.get("state") == "absent":
         if existing_namespace is not None:
-            nomad.delete_namespace(module.params.get('name'))
+            nomad.delete_namespace(module.params.get("name"))
             result["changed"] = True
-    
+
     # decide if we should create/update a namespace
     create_namespace = False
     if module.params.get("state") == "present":
@@ -60,9 +61,9 @@ def run_module():
 
     if create_namespace:
         nomad.create_or_update_namespace(
-                module.params.get('name'),
-                json.dumps(desired_namespace),
-            )
+            module.params.get("name"),
+            json.dumps(desired_namespace),
+        )
         result["changed"] = True
 
     module.exit_json(**result)

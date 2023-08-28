@@ -3,10 +3,11 @@
 # SPDX-License-Identifier: MIT
 
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ..module_utils.nomad import NomadAPI
-
 import json
+
+from ansible.module_utils.basic import AnsibleModule, env_fallback
+
+from ..module_utils.nomad import NomadAPI
 
 
 def run_module():
@@ -15,9 +16,7 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
     )
 
     # seed the final result dict in the object. Default nothing changed ;)
@@ -36,11 +35,11 @@ def run_module():
         # when bootstrapping, we should ensure the returned token is the same
         token = nomad.acl_bootstrap()
         result["changed"] = True
-        if token.get('SecretID') != module.params.get('management_token'):
-            module.fail_json('bootstrap token has unexpected value: ' + token.get('SecretID'))
-    elif existing_token.get('Type') != "management":
-        module.fail_json('token provided is not of management type')
-    
+        if token.get("SecretID") != module.params.get("management_token"):
+            module.fail_json("bootstrap token has unexpected value: " + token.get("SecretID"))
+    elif existing_token.get("Type") != "management":
+        module.fail_json("token provided is not of management type")
+
     module.exit_json(**result)
 
 

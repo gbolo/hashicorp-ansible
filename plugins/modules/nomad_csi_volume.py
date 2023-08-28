@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.nomad import NomadAPI
 from ..module_utils.utils import del_none, is_subset
-
-import json
 
 
 def run_module():
@@ -18,16 +19,14 @@ def run_module():
     )
     capabilities_spec = dict(
         access_mode=dict(type="str", aliases=["AccessMode"], required=True),
-        attachment_mode=dict(type="str", aliases=["AttachmentMode"], required=True),        
+        attachment_mode=dict(type="str", aliases=["AttachmentMode"], required=True),
     )
     module_args = dict(
         state=dict(type="str", choices=["present", "absent"], default="present"),
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
         id=dict(type="str", required=True),
         name=dict(type="str", required=True),
         namespace=dict(type="str", default="default"),
@@ -56,27 +55,33 @@ def run_module():
     #       volume spec along with a mismatched bool that can be
     #       inspected by the caller.
 
-    desired_volume = del_none(dict(
-        ID=module.params.get("id"),
-        Name=module.params.get("name"),
-        Namespace=module.params.get("namespace"),
-        PluginID=module.params.get("plugin_id"),
-        Parameters=module.params.get("parameters"),
-    ))
+    desired_volume = del_none(
+        dict(
+            ID=module.params.get("id"),
+            Name=module.params.get("name"),
+            Namespace=module.params.get("namespace"),
+            PluginID=module.params.get("plugin_id"),
+            Parameters=module.params.get("parameters"),
+        )
+    )
     if module.params.get("capabilities") is not None:
         capabilities = []
         for c in module.params.get("capabilities"):
-            capabilities.append(dict(
-                AccessMode=c.get('access_mode'),
-                AttachmentMode=c.get('attachment_mode'),
-            ))
-        desired_volume['RequestedCapabilities'] = capabilities
-    
+            capabilities.append(
+                dict(
+                    AccessMode=c.get("access_mode"),
+                    AttachmentMode=c.get("attachment_mode"),
+                )
+            )
+        desired_volume["RequestedCapabilities"] = capabilities
+
     if module.params.get("mount_options") is not None:
-        desired_volume['MountOptions'] = del_none(dict(
-            FsType=module.params.get("mount_options").get('fs_type'),
-            MountFlags=module.params.get("mount_options").get('mount_flags'),
-        ))
+        desired_volume["MountOptions"] = del_none(
+            dict(
+                FsType=module.params.get("mount_options").get("fs_type"),
+                MountFlags=module.params.get("mount_options").get("mount_flags"),
+            )
+        )
 
     volume_id = module.params.get("id")
     existing_volume = nomad.get_csi_volume(volume_id)
@@ -93,14 +98,12 @@ def run_module():
             if not is_subset(desired_volume, existing_volume):
                 result["mismatched"] = True
         else:
-            request_body = {
-                "Volumes": [desired_volume]
-            }
-            result['volume'] = nomad.create_csi_volume(volume_id, json.dumps(request_body))
+            request_body = {"Volumes": [desired_volume]}
+            result["volume"] = nomad.create_csi_volume(volume_id, json.dumps(request_body))
             result["changed"] = True
 
     # post final results
-    if result.get('volume') is None and existing_volume is not None:
+    if result.get("volume") is None and existing_volume is not None:
         result["volume"] = existing_volume
 
     module.exit_json(**result)

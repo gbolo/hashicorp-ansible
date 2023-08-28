@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.nomad import NomadAPI
 from ..module_utils.utils import del_none, is_subset
 
-import json
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
@@ -22,15 +24,13 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
         name=dict(type="str", required=True),
         description=dict(type="str"),
         rules=dict(type="str"),
         job_acl=dict(type="dict", default={}, options=job_acl_spec),
     )
-    
+
     # seed the final result dict in the object. Default nothing changed ;)
     result = dict(
         changed=False,
@@ -40,7 +40,7 @@ def run_module():
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=False,
-        required_if=[('state', 'present', ('rules',))],
+        required_if=[("state", "present", ("rules",))],
     )
 
     # the NomadAPI can init itself via the module args
@@ -69,22 +69,18 @@ def run_module():
 
     if module.params.get("state") == "present":
         if existing_policy is None:
-            nomad.create_or_update_acl_policy(
-                policy_name, json.dumps(desired_policy_body)
-            )
+            nomad.create_or_update_acl_policy(policy_name, json.dumps(desired_policy_body))
             result["policy"] = nomad.get_acl_policy(policy_name)
             result["changed"] = True
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                nomad.create_or_update_acl_policy(
-                    policy_name, json.dumps(desired_policy_body)
-                )
+                nomad.create_or_update_acl_policy(policy_name, json.dumps(desired_policy_body))
                 result["policy"] = nomad.get_acl_policy(policy_name)
                 result["changed"] = True
 
     # post final results
-    if result.get('policy') is None and existing_policy is not None:
+    if result.get("policy") is None and existing_policy is not None:
         result["policy"] = existing_policy
 
     module.exit_json(**result)

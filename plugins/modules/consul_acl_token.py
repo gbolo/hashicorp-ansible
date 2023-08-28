@@ -3,16 +3,17 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.consul import ConsulAPI
 from ..module_utils.utils import del_none, is_subset
-
-import json
 
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    polcies_and_roles_spec = dict(
+    policies_and_roles_spec = dict(
         id=dict(type="str", aliases=["ID"]),
         name=dict(type="str", aliases=["Name"]),
     )
@@ -21,14 +22,12 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
         accessor_id=dict(type="str"),
         secret_id=dict(type="str"),
         description=dict(type="str"),
-        policies=dict(type="list", elements="dict", options=polcies_and_roles_spec),
-        roles=dict(type="list", elements="dict", options=polcies_and_roles_spec),
+        policies=dict(type="list", elements="dict", options=policies_and_roles_spec),
+        roles=dict(type="list", elements="dict", options=policies_and_roles_spec),
         match_on_name=dict(type="bool", default=True),
         is_local=dict(type="bool", default=False),
         expiration_ttl=dict(type="str"),
@@ -47,12 +46,12 @@ def run_module():
 
     desired_token_body = del_none(
         dict(
-            AccessorID=module.params.get('accessor_id'),
-            Description=module.params.get('description'),
-            ExpirationTTL=module.params.get('expiration_ttl'),
-            Local=module.params.get('local'),
-            SecretID=module.params.get('secret_id'),
-            ServiceIdentities=module.params.get('service_identities'),
+            AccessorID=module.params.get("accessor_id"),
+            Description=module.params.get("description"),
+            ExpirationTTL=module.params.get("expiration_ttl"),
+            Local=module.params.get("local"),
+            SecretID=module.params.get("secret_id"),
+            ServiceIdentities=module.params.get("service_identities"),
         )
     )
 
@@ -60,53 +59,61 @@ def run_module():
     if module.params.get("policies") is not None:
         policies = []
         for p in module.params.get("policies"):
-            policies.append(del_none(dict(
-                ID=p.get('id'),
-                Name=p.get('name'),
-            )))
-        desired_token_body['Policies'] = policies
+            policies.append(
+                del_none(
+                    dict(
+                        ID=p.get("id"),
+                        Name=p.get("name"),
+                    )
+                )
+            )
+        desired_token_body["Policies"] = policies
 
     if module.params.get("roles") is not None:
         roles = []
         for r in module.params.get("roles"):
-            roles.append(del_none(dict(
-                ID=r.get('id'),
-                Name=r.get('name'),
-            )))
-        desired_token_body['Roles'] = roles
+            roles.append(
+                del_none(
+                    dict(
+                        ID=r.get("id"),
+                        Name=r.get("name"),
+                    )
+                )
+            )
+        desired_token_body["Roles"] = roles
 
     # if an accessor_id is defined, try to find the token
     existing_token = None
-    accessor_id = module.params.get('accessor_id')
+    accessor_id = module.params.get("accessor_id")
     if accessor_id is not None:
         existing_token = consul.get_acl_token(accessor_id)
 
     # delete token only when it exists
-    if module.params.get('state') == "absent":
+    if module.params.get("state") == "absent":
         if existing_token is not None:
             consul.delete_acl_token(accessor_id)
-            result['changed'] = True
+            result["changed"] = True
 
-    if module.params.get('state') == "present":
+    if module.params.get("state") == "present":
         # decide to create a token if accessor_id is not set
         # or one does not already exsit
         if accessor_id is None or existing_token is None:
-            result['token'] = consul.create_acl_token(json.dumps(desired_token_body))
-            result['changed'] = True
+            result["token"] = consul.create_acl_token(json.dumps(desired_token_body))
+            result["changed"] = True
 
         else:
             # compare if we need to change anything about the token
             # NOTE: DO NOT compare expiration
-            if desired_token_body.get('ExpirationTTL') is not None:
-                desired_token_body.pop('ExpirationTTL')
+            if desired_token_body.get("ExpirationTTL") is not None:
+                desired_token_body.pop("ExpirationTTL")
             if not is_subset(desired_token_body, existing_token):
                 result["token"] = consul.update_acl_token(
-                    existing_token.get('AccessorID'), json.dumps(desired_token_body)
+                    existing_token.get("AccessorID"), json.dumps(desired_token_body)
                 )
                 result["changed"] = True
 
     # post final results
-    if result.get('token') is None and existing_token is not None:
+    if result.get("token") is None and existing_token is not None:
         result["token"] = existing_token
 
     module.exit_json(**result)

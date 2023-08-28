@@ -30,5 +30,3 @@
       loop:
         - nomad_acl_bootstrap
         - nomad_acl_policy
-
-

@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
+
 
 def del_none(d):
     """
@@ -17,13 +19,14 @@ def del_none(d):
             del_none(value)
     return cloned
 
+
 def is_subset(subset, superset):
     """
     Returns True if subset is part of the superset.
     Essentially compares the dicts while ignoring missing fields ;)
     """
 
-    # NOTE: match is not availble until python 3.10. the target servers have python 3.9 ;(
+    # NOTE: match is not available until python 3.10. the target servers have python 3.9 ;(
     # match subset:
     #     case dict(_):
     #         return all(key in superset and is_subset(val, superset[key]) for key, val in subset.items())

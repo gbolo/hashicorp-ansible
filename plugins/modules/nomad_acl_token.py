@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.nomad import NomadAPI
 from ..module_utils.utils import del_none, is_subset
-
-import json
 
 
 def run_module():
@@ -17,9 +18,7 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
         type=dict(type="str", choices=["client", "management"], default="client"),
         name=dict(type="str"),
         match_on_name=dict(type="bool", default=True),
@@ -67,25 +66,21 @@ def run_module():
 
     if module.params.get("state") == "present":
         if existing_token is None:
-            result["token"] = nomad.create_acl_token(
-                json.dumps(desired_token_body)
-            )
+            result["token"] = nomad.create_acl_token(json.dumps(desired_token_body))
             result["changed"] = True
         else:
             # compare if we need to change anything about the token
             # NOTE: DO NOT compare expiration
-            if desired_token_body.get('ExpirationTTL') is not None:
-                desired_token_body.pop('ExpirationTTL')
+            if desired_token_body.get("ExpirationTTL") is not None:
+                desired_token_body.pop("ExpirationTTL")
             if not is_subset(desired_token_body, existing_token):
-                result["token"] = nomad.update_acl_token(
-                    existing_token.get('AccessorID'), json.dumps(existing_token)
-                )
+                result["token"] = nomad.update_acl_token(existing_token.get("AccessorID"), json.dumps(existing_token))
                 result["changed"] = True
 
     # post final results
-    if result.get('token') is None and existing_token is not None:
+    if result.get("token") is None and existing_token is not None:
         result["token"] = existing_token
-    
+
     module.exit_json(**result)
 
 

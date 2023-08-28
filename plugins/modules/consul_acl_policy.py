@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.consul import ConsulAPI
 from ..module_utils.utils import del_none, is_subset
 
-import json
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
@@ -16,16 +18,14 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["CONSUL_HTTP_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["CONSUL_HTTP_TOKEN"])
-        ),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["CONSUL_HTTP_TOKEN"])),
         id=dict(type="str"),
         name=dict(type="str", required=True),
         description=dict(type="str"),
         rules=dict(type="str", required=True),
         datacenters=dict(type="list", elements="str"),
     )
-    
+
     # seed the final result dict in the object. Default nothing changed ;)
     result = dict(
         changed=False,
@@ -39,14 +39,16 @@ def run_module():
 
     policy_name = module.params.get("name")
     policy_id = module.params.get("id")
-    
+
     existing_policy = None
-    desired_policy_body = del_none(dict(
-        Name=policy_name,
-        Description=module.params.get("description"),
-        Rules=module.params.get("rules"),
-        Datacenters=module.params.get("datacenters"),
-    ))
+    desired_policy_body = del_none(
+        dict(
+            Name=policy_name,
+            Description=module.params.get("description"),
+            Rules=module.params.get("rules"),
+            Datacenters=module.params.get("datacenters"),
+        )
+    )
 
     # try to find an existing policy.
     # policy IDs are randomly generated when creating a policy.
@@ -73,20 +75,16 @@ def run_module():
 
     if module.params.get("state") == "present":
         if existing_policy is None:
-            result["policy"] = consul.create_acl_policy(
-                json.dumps(desired_policy_body)
-            )
+            result["policy"] = consul.create_acl_policy(json.dumps(desired_policy_body))
             result["changed"] = True
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                result["policy"] = consul.update_acl_policy(
-                    policy_id, json.dumps(desired_policy_body)
-                )
+                result["policy"] = consul.update_acl_policy(policy_id, json.dumps(desired_policy_body))
                 result["changed"] = True
 
     # post final results
-    if result.get('policy') is None and existing_policy is not None:
+    if result.get("policy") is None and existing_policy is not None:
         result["policy"] = existing_policy
 
     module.exit_json(**result)

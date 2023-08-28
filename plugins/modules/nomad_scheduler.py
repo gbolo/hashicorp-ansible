@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 
+import json
+
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+
 from ..module_utils.nomad import NomadAPI
 from ..module_utils.utils import is_subset
-
-import json
 
 
 def run_module():
@@ -22,10 +23,8 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])
-        ),
-        scheduler_algorithm=dict(type="str", choices=["binpack", "spread"], default='binpack'),
+        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
+        scheduler_algorithm=dict(type="str", choices=["binpack", "spread"], default="binpack"),
         memory_oversubscription_enabled=dict(type="bool", default=False),
         reject_job_registration=dict(type="bool", default=False),
         pause_eval_broker=dict(type="bool", default=False),
@@ -43,7 +42,7 @@ def run_module():
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
 
-    existing_config = nomad.get_scheduler_config().get('SchedulerConfig')
+    existing_config = nomad.get_scheduler_config().get("SchedulerConfig")
     desired_config = dict(
         SchedulerAlgorithm=module.params.get("scheduler_algorithm"),
         MemoryOversubscriptionEnabled=module.params.get("memory_oversubscription_enabled"),
@@ -60,7 +59,7 @@ def run_module():
     if not is_subset(desired_config, existing_config):
         nomad.update_scheduler_config(json.dumps(desired_config))
         result["changed"] = True
-  
+
     result["scheduler_config"] = desired_config
     module.exit_json(**result)
 

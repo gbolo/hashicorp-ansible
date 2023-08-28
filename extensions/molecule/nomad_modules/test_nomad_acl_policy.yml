@@ -72,7 +72,7 @@
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
     name: "{{ random_name }}"
-    state: absent    
+    state: absent
 
 - ansible.builtin.assert:
     that:
@@ -84,7 +84,7 @@
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
     name: "{{ random_name }}"
-    state: absent    
+    state: absent
 
 - ansible.builtin.assert:
     that:
