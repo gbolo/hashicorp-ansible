@@ -10,6 +10,7 @@ from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six.moves.urllib.parse import quote_plus
 from ansible.module_utils.common.text.converters import to_native
+from . import debug
 
 URL_ACL_POLICIES = "{url}/v1/acl/policies"
 URL_ACL_POLICY_ID = "{url}/v1/acl/policy/{id}"
@@ -47,25 +48,42 @@ class ConsulAPI(object):
                 timeout=self.connection_timeout,
                 validate_certs=self.validate_certs
             )
-            # print("{method} {url} -> {status}".format(method=method, url=url, status=response.getcode()))
+            response_body = response.read().decode('utf-8')
+            debug.log_request(
+                self.module,
+                url,
+                method,
+                body,
+                response.getcode(),
+                response_body,
+            )
             if json_response:
                 try:
-                    return json.loads(to_native(response.read()))
+                    return json.loads(to_native(response_body))
                 except ValueError as e:
                     self.module.fail_json(msg='API returned invalid JSON: %s'
                                             % (str(e)))
-            return response.read().decode('utf-8')
+            return response_body
         
         except HTTPError as e:
+            response_body = e.read().decode('utf-8')
+            debug.log_request(
+                self.module,
+                url,
+                method,
+                body,
+                e.code,
+                response_body,
+            )
             if e.code in ignore_codes:
                 return None
             
             if e.code == 401 or e.code == 403:
                 self.module.fail_json(msg='Not Authorized: status=%s [%s] %s ->\n%s'
-                                          % (e.code, method, url, e.read().decode('utf-8')))
+                                          % (e.code, method, url, response_body))
             
             self.module.fail_json(msg='Error: status=%s [%s] %s ->\n%s'
-                                          % (e.code, method, url, e.read().decode('utf-8')))
+                                          % (e.code, method, url, response_body))
             
         except Exception as e:
             print('here')
