@@ -9,6 +9,10 @@ PR = poetry run
 default:
 	set -euo pipefail
 
+.PHONY: pre-commit
+pre-commit:
+	$(PR) pre-commit run --all-files
+
 .PHONY: check-copyright-headers
 check-copyright-headers: default
 	copywrite headers --spdx "MIT" --plan
