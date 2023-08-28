@@ -12,9 +12,9 @@ import json
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    polcies_spec = dict(
+    polcies_and_roles_spec = dict(
         id=dict(type="str", aliases=["ID"]),
-        name=dict(type="str", aliases=["Name"]),    
+        name=dict(type="str", aliases=["Name"]),
     )
     module_args = dict(
         state=dict(type="str", choices=["present", "absent"], default="present"),
@@ -27,8 +27,8 @@ def run_module():
         accessor_id=dict(type="str"),
         secret_id=dict(type="str"),
         description=dict(type="str"),
-        policies=dict(type="list", elements="dict", options=polcies_spec),
-        roles=dict(type="list", elements="dict"),
+        policies=dict(type="list", elements="dict", options=polcies_and_roles_spec),
+        roles=dict(type="list", elements="dict", options=polcies_and_roles_spec),
         match_on_name=dict(type="bool", default=True),
         is_local=dict(type="bool", default=False),
         expiration_ttl=dict(type="str"),
@@ -51,12 +51,12 @@ def run_module():
             Description=module.params.get('description'),
             ExpirationTTL=module.params.get('expiration_ttl'),
             Local=module.params.get('local'),
-            # Policies=module.params.get('policies'),
-            # Roles=module.params.get('roles'),
             SecretID=module.params.get('secret_id'),
             ServiceIdentities=module.params.get('service_identities'),
         )
     )
+
+    # populate any policies or roles defined
     if module.params.get("policies") is not None:
         policies = []
         for p in module.params.get("policies"):
@@ -65,6 +65,15 @@ def run_module():
                 Name=p.get('name'),
             )))
         desired_token_body['Policies'] = policies
+
+    if module.params.get("roles") is not None:
+        roles = []
+        for r in module.params.get("roles"):
+            roles.append(del_none(dict(
+                ID=r.get('id'),
+                Name=r.get('name'),
+            )))
+        desired_token_body['Roles'] = roles
 
     # if an accessor_id is defined, try to find the token
     existing_token = None
@@ -76,7 +85,7 @@ def run_module():
     if module.params.get('state') == "absent":
         if existing_token is not None:
             consul.delete_acl_token(accessor_id)
-            result['changed'] == True
+            result['changed'] = True
 
     if module.params.get('state') == "present":
         # decide to create a token if accessor_id is not set
@@ -99,7 +108,7 @@ def run_module():
     # post final results
     if result.get('token') is None and existing_token is not None:
         result["token"] = existing_token
-    
+
     module.exit_json(**result)
 
 
