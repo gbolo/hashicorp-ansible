@@ -96,7 +96,7 @@ def run_module():
 
     if module.params.get("state") == "present":
         # decide to create a token if accessor_id is not set
-        # or one does not already exsit
+        # or one does not already exist
         if accessor_id is None or existing_token is None:
             result["token"] = consul.create_acl_token(json.dumps(desired_token_body))
             result["changed"] = True

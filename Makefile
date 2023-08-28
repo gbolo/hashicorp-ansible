@@ -11,11 +11,11 @@ default:
 
 .PHONY: check-copyright-headers
 check-copyright-headers: default
-	copyright headers --spdx "MIT" --plan
+	copywrite headers --spdx "MIT" --plan
 
 .PHONY: apply-copyright-headers
 apply-copyright-headers: default
-	copyright headers --spdx "MIT"
+	copywrite headers --spdx "MIT"
 
 .PHONY: dependency
 dependency: default
