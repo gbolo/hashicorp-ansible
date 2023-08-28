@@ -4,8 +4,8 @@
 
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible.module_utils.consul import ConsulAPI
-from ansible.module_utils.utils import del_none, is_subset
+from ..module_utils.consul import ConsulAPI
+from ..module_utils.utils import del_none, is_subset
 
 import json
 

@@ -4,8 +4,7 @@
 
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible.module_utils.nomad import NomadAPI
-from ansible.module_utils.utils import del_none, is_subset
+from ..module_utils.nomad import NomadAPI
 
 import json
 

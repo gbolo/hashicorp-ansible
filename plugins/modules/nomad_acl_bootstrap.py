@@ -4,7 +4,7 @@
 
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible.module_utils.nomad import NomadAPI
+from ..module_utils.nomad import NomadAPI
 
 import json
 
