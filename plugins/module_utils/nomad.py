@@ -10,6 +10,7 @@ import sys
 
 from ansible.module_utils.common.text.converters import to_native
 from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.six.moves.urllib.parse import quote_plus
 from ansible.module_utils.urls import open_url
 
 from . import debug
@@ -24,10 +25,10 @@ URL_ACL_BOOTSTRAP = "{url}/v1/acl/bootstrap"
 URL_NAMESPACES = "{url}/v1/namespaces"
 URL_NAMESPACE = "{url}/v1/namespace/{name}"
 URL_OPERATOR_SCHEDULER = "{url}/v1/operator/scheduler/configuration"
-URL_CSI_VOLUMES = "{url}/v1/volumes?type=csi"
-URL_CSI_VOLUME = "{url}/v1/volume/csi/{id}"
-URL_CSI_VOLUME_CREATE = "{url}/v1/volume/csi/{id}/create"
-URL_CSI_VOLUME_DELETE = "{url}/v1/volume/csi/{id}/delete"
+URL_CSI_VOLUMES = "{url}/v1/volumes?type=csi&namespace={namespace}"
+URL_CSI_VOLUME = "{url}/v1/volume/csi/{id}?namespace={namespace}"
+URL_CSI_VOLUME_CREATE = "{url}/v1/volume/csi/{id}/create?namespace={namespace}"
+URL_CSI_VOLUME_DELETE = "{url}/v1/volume/csi/{id}/delete?namespace={namespace}"
 URL_JOBS = "{url}/v1/jobs"
 URL_JOB = "{url}/v1/job/{id}"
 URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}"
@@ -42,6 +43,7 @@ class NomadAPI(object):
         self.module = module
         self.url = self.module.params.get("url")
         self.management_token = self.module.params.get("management_token")
+        self.namespace = self.module.params.get("namespace")
         self.validate_certs = self.module.params.get("validate_certs")
         self.connection_timeout = self.module.params.get("connection_timeout")
         self.headers = {
@@ -254,14 +256,14 @@ class NomadAPI(object):
     #
     def get_csi_volumes(self):
         return self.api_request(
-            url=URL_CSI_VOLUMES.format(url=self.url),
+            url=URL_CSI_VOLUMES.format(url=self.url, namespace=quote_plus(self.namespace)),
             method="GET",
             json_response=True,
         )
 
     def get_csi_volume(self, id):
         return self.api_request(
-            url=URL_CSI_VOLUME.format(url=self.url, id=id),
+            url=URL_CSI_VOLUME.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="GET",
             json_response=True,
             accept_404=True,
@@ -269,7 +271,7 @@ class NomadAPI(object):
 
     def delete_csi_volume(self, id):
         return self.api_request(
-            url=URL_CSI_VOLUME_DELETE.format(url=self.url, id=id),
+            url=URL_CSI_VOLUME_DELETE.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="DELETE",
             json_response=True,
             accept_404=True,
@@ -277,7 +279,7 @@ class NomadAPI(object):
 
     def create_csi_volume(self, id, body):
         return self.api_request(
-            url=URL_CSI_VOLUME_CREATE.format(url=self.url, id=id),
+            url=URL_CSI_VOLUME_CREATE.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="PUT",
             body=body,
             json_response=True,
