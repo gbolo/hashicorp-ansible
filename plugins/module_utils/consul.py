@@ -22,6 +22,7 @@ URL_ACL_TOKENS = "{url}/v1/acl/tokens"
 URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
 URL_CONNECT_INTENTION = "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
+URL_SERVICE_NAME = "{url}/v1/catalog/service/{name}"
 
 
 class ConsulAPI(object):
@@ -189,7 +190,6 @@ class ConsulAPI(object):
     #
     # CONNECT INTENTIONS
     #
-
     def get_connect_intention(self, source, destination):
         return self.api_request(
             url=URL_CONNECT_INTENTION.format(
@@ -223,5 +223,18 @@ class ConsulAPI(object):
             ),
             method="PUT",
             body=body,
+            json_response=True,
+        )
+
+    #
+    # Services
+    #
+    def get_service(self, name):
+        return self.api_request(
+            url=URL_SERVICE_NAME.format(
+                url=self.url,
+                name=name,
+            ),
+            method="GET",
             json_response=True,
         )
