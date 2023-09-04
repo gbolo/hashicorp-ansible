@@ -28,7 +28,6 @@ def run_module():
         description=dict(type="str"),
         policies=dict(type="list", elements="dict", options=policies_and_roles_spec),
         roles=dict(type="list", elements="dict", options=policies_and_roles_spec),
-        match_on_name=dict(type="bool", default=True),
         is_local=dict(type="bool", default=False),
         expiration_ttl=dict(type="str"),
     )
