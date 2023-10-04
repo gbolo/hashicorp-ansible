@@ -9,6 +9,13 @@ from ansible.module_utils.basic import AnsibleModule, env_fallback
 
 from ..module_utils.nomad import NomadAPI
 
+# import nomad_diff if it is available on the system
+_nomad_diff_available = False
+import importlib.util
+nomad_diff_spec = importlib.util.find_spec("nomad_diff")
+if nomad_diff_spec is not None:
+    import nomad_diff
+    _nomad_diff_available = True
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
@@ -26,7 +33,7 @@ def run_module():
     # the AnsibleModule object
     module = AnsibleModule(
         argument_spec=module_args,
-        supports_check_mode=False,
+        supports_check_mode=True,
         mutually_exclusive=[["name", "hcl_spec"]],
         required_one_of=[["name", "hcl_spec"]],
         required_if=[["state", "present", ["hcl_spec"]]],
@@ -59,8 +66,12 @@ def run_module():
         # also the job can still exist but not purged, in this case the
         # job has Stop set to True
         if (existing_job is not None and purged) or (existing_job is not None and not existing_job["Stop"]):
-            nomad.delete_job(job_id, purged)
             result["changed"] = True
+            # exit now if in check mode
+            if module.check_mode:
+                module.exit_json(**result)
+
+            nomad.delete_job(job_id, purged)
 
     # we can rely on nomad plan to decide if we should submit a job ;)
     if module.params.get("state") == "present":
@@ -73,8 +84,23 @@ def run_module():
                 )
             ),
         )
-        result["plan_diff"] = plan["Diff"]
+
+        # do a nice diff if the system has nomad_diff available
+        if _nomad_diff_available and plan.get("Diff") is not None:
+            try:
+                result["diff"] = dict(
+                    prepared=nomad_diff.format(plan["Diff"], colors=True, verbose=False)
+                )
+            except:
+                # if we can't get a diff, it's not a big deal...
+                pass
+        
         if plan["Diff"].get("Type") != "None":
+            result["changed"] = True
+            # exit now if in check mode
+            if module.check_mode:
+                module.exit_json(**result)
+            
             result["submit_response"] = nomad.create_or_update_job(
                 job_id,
                 json.dumps(
@@ -87,7 +113,6 @@ def run_module():
                     )
                 ),
             )
-            result["changed"] = True
 
     module.exit_json(**result)
 
