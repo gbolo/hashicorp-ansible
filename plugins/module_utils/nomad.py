@@ -30,10 +30,10 @@ URL_CSI_VOLUME = "{url}/v1/volume/csi/{id}?namespace={namespace}"
 URL_CSI_VOLUME_CREATE = "{url}/v1/volume/csi/{id}/create?namespace={namespace}"
 URL_CSI_VOLUME_DELETE = "{url}/v1/volume/csi/{id}/delete?namespace={namespace}"
 URL_JOBS = "{url}/v1/jobs"
-URL_JOB = "{url}/v1/job/{id}"
-URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}"
-URL_JOB_PARSE = "{url}/v1/jobs/parse"
-URL_JOB_PLAN = "{url}/v1/job/{id}/plan"
+URL_JOB = "{url}/v1/job/{id}?namespace={namespace}"
+URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}&namespace={namespace}"
+URL_JOB_PARSE = "{url}/v1/jobs/parse?namespace={namespace}"
+URL_JOB_PLAN = "{url}/v1/job/{id}/plan?namespace={namespace}"
 
 
 class NomadAPI(object):
@@ -290,7 +290,7 @@ class NomadAPI(object):
     #
     def parse_job(self, body):
         return self.api_request(
-            url=URL_JOB_PARSE.format(url=self.url),
+            url=URL_JOB_PARSE.format(url=self.url, namespace=quote_plus(self.namespace)),
             method="POST",
             body=body,
             json_response=True,
@@ -298,7 +298,7 @@ class NomadAPI(object):
 
     def plan_job(self, id, body):
         return self.api_request(
-            url=URL_JOB_PLAN.format(url=self.url, id=id),
+            url=URL_JOB_PLAN.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="POST",
             body=body,
             json_response=True,
@@ -306,22 +306,22 @@ class NomadAPI(object):
 
     def delete_job(self, id, purge=False):
         return self.api_request(
-            url=URL_JOB_DELETE.format(url=self.url, id=id, purge=purge),
+            url=URL_JOB_DELETE.format(url=self.url, id=id, purge=purge, namespace=quote_plus(self.namespace)),
             method="DELETE",
             json_response=True,
         )
 
     def create_or_update_job(self, id, body):
         return self.api_request(
-            url=URL_JOB.format(url=self.url, id=id),
+            url=URL_JOB.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="POST",
             body=body,
             json_response=True,
         )
 
-    def get_job(self, id, namespace="default"):
+    def get_job(self, id):
         return self.api_request(
-            url=URL_JOB.format(url=self.url, id=id),
+            url=URL_JOB.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="GET",
             json_response=True,
             accept_404=True,
