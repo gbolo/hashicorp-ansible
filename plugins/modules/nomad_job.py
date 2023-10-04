@@ -67,6 +67,10 @@ def run_module():
         # job has Stop set to True
         if (existing_job is not None and purged) or (existing_job is not None and not existing_job["Stop"]):
             result["changed"] = True
+            result["diff"] = dict(
+                before="Job ID {} in namespace {} will be STOPPED!\n".format(job_id, module.params.get("namespace")),
+                after=""
+            )
             # exit now if in check mode
             if module.check_mode:
                 module.exit_json(**result)
