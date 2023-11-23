@@ -18,9 +18,11 @@ URL_ACL_POLICIES = "{url}/v1/acl/policies"
 URL_ACL_POLICY_ID = "{url}/v1/acl/policy/{id}"
 URL_ACL_POLICY_NAME = "{url}/v1/acl/policy/name/{name}"
 URL_ACL_POLICY_CREATE = "{url}/v1/acl/policy"
+URL_ACL_BOOTSTRAP = "{url}/v1/acl/bootstrap"
 URL_ACL_TOKENS = "{url}/v1/acl/tokens"
 URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
+URL_ACL_TOKEN_SELF = "{url}/v1/acl/token/self"
 URL_CONNECT_INTENTION = "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
 URL_SERVICE_NAME = "{url}/v1/catalog/service/{name}"
 
@@ -145,6 +147,17 @@ class ConsulAPI(object):
     #
     # ACL Tokens
     #
+    def get_self_token(self):
+        return self.api_request(
+            url=URL_ACL_TOKEN_SELF.format(url=self.url),
+            method="GET",
+            json_response=True,
+            # for some reason, consul api returns 403 if token not found...
+            # despite the actual response body revealing it could not find
+            # the token ;)
+            ignore_codes=[403],
+        )
+    
     def get_acl_tokens(self):
         return self.api_request(
             url=URL_ACL_TOKENS.format(url=self.url),
@@ -184,6 +197,14 @@ class ConsulAPI(object):
             url=URL_ACL_TOKEN_ID.format(url=self.url, id=accessor_id),
             method="PUT",
             body=body,
+            json_response=True,
+        )
+
+    def acl_bootstrap(self):
+        return self.api_request(
+            url=URL_ACL_BOOTSTRAP.format(url=self.url),
+            method="PUT",
+            body=json.dumps(dict(BootstrapSecret=self.management_token)),
             json_response=True,
         )
 
