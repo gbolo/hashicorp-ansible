@@ -83,6 +83,13 @@ def run_module():
             )
         )
 
+    if module.params.get("capacity_gb") > 0:
+        # TODO: for now we set both the min and max to the same value.
+        #       add support for distinct values.
+        volume_size = module.params.get("capacity_gb") * 1024 * 1024 * 1024
+        desired_volume["RequestedCapacityMin"] = volume_size
+        desired_volume["RequestedCapacityMax"] = volume_size
+
     volume_id = module.params.get("id")
     existing_volume = nomad.get_csi_volume(volume_id)
 
