@@ -157,7 +157,7 @@ class ConsulAPI(object):
             # the token ;)
             ignore_codes=[403],
         )
-    
+
     def get_acl_tokens(self):
         return self.api_request(
             url=URL_ACL_TOKENS.format(url=self.url),

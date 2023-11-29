@@ -39,13 +39,13 @@ def run_module():
         if token.get("SecretID") != module.params.get("management_token"):
             module.fail_json("bootstrap token has unexpected value: " + token.get("SecretID"))
     else:
-        is_mgmt=False
+        is_mgmt = False
         # consul management tokens have a policy with ID: 00000000-0000-0000-0000-000000000001 and named global-management
         for policy in existing_token.get("Policies"):
             if policy.get("Name") == "global-management":
-                is_mgmt=True
+                is_mgmt = True
                 break
-            
+
         if not is_mgmt:
             module.fail_json("token provided is not of management type")
 
