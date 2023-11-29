@@ -12,10 +12,13 @@ from ..module_utils.nomad import NomadAPI
 # import nomad_diff if it is available on the system
 _nomad_diff_available = False
 import importlib.util
+
 nomad_diff_spec = importlib.util.find_spec("nomad_diff")
 if nomad_diff_spec is not None:
     import nomad_diff
+
     _nomad_diff_available = True
+
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
@@ -69,7 +72,7 @@ def run_module():
             result["changed"] = True
             result["diff"] = dict(
                 before="Job ID {} in namespace {} will be STOPPED!\n".format(job_id, module.params.get("namespace")),
-                after=""
+                after="",
             )
             # exit now if in check mode
             if module.check_mode:
@@ -92,19 +95,29 @@ def run_module():
         # do a nice diff if the system has nomad_diff available
         if _nomad_diff_available and plan.get("Diff") is not None:
             try:
-                result["diff"] = dict(
-                    prepared=nomad_diff.format(plan["Diff"], colors=True, verbose=False)
-                )
+                result["diff"] = dict(prepared=nomad_diff.format(plan["Diff"], colors=True, verbose=False))
             except:
                 # if we can't get a diff, it's not a big deal...
                 pass
-        
+
+        # if nomad_diff is not available we can try to fallback to a manual diff
+        elif plan.get("Diff") is not None and existing_job is not None:
+            submission = nomad.get_job_submission(
+                job_id,
+                existing_job.get("Version", 1),
+            )
+            if submission is not None:
+                result["diff"] = dict(
+                    before=submission.get("Source"),
+                    after=module.params.get("hcl_spec"),
+                )
+
         if plan["Diff"].get("Type") != "None":
             result["changed"] = True
             # exit now if in check mode
             if module.check_mode:
                 module.exit_json(**result)
-            
+
             result["submit_response"] = nomad.create_or_update_job(
                 job_id,
                 json.dumps(
