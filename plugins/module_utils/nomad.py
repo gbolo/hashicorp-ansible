@@ -273,7 +273,7 @@ class NomadAPI(object):
         return self.api_request(
             url=URL_CSI_VOLUME_DELETE.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="DELETE",
-            json_response=True,
+            json_response=False,
             accept_404=True,
         )
 
