@@ -18,12 +18,20 @@ def run_module():
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
-        management_token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, ["NOMAD_TOKEN"])),
+        management_token=dict(
+            type="str",
+            required=True,
+            no_log=True,
+            fallback=(env_fallback, ["NOMAD_TOKEN"]),
+        ),
         type=dict(type="str", choices=["client", "management"], default="client"),
         name=dict(type="str"),
         match_on_name=dict(type="bool", default=True),
         is_global=dict(type="bool", default=False),
-        policies=dict(type="list", elements="str", required=True),
+        policies=dict(
+            type="list",
+            elements="str",
+        ),
         expiration_ttl=dict(type="str"),
         accessor_id=dict(type="str"),
     )
@@ -35,6 +43,12 @@ def run_module():
 
     # the AnsibleModule object
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
+
+    # if the acl token is of client type and present, then policies are required
+    if module.params.get("type") == "client" and module.params.get("state") == "present":
+        policies = module.params.get("policies")
+        if policies is None or policies.len() == 0:
+            module.fail_json("policies are required for nomad acl tokens of client type.")
 
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
