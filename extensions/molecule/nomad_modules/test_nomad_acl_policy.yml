@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 - set_fact:
-    random_name: "{{ 1024 | random | hash('sha1') }}"
+    random_policy_name: "{{ 1024 | random | hash('sha1') }}"
     random_description: "{{ 1024 | random | hash('sha1') }}"
     another_random_description: "{{ 1024 | random | hash('sha1') }}"
 
@@ -11,7 +11,7 @@
   nomad_acl_policy:
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
-    name: "{{ random_name }}"
+    name: "{{ random_policy_name }}"
     description: "{{ random_description }}"
     rules: |
       namespace "default" {
@@ -25,7 +25,7 @@
 - ansible.builtin.assert:
     that:
       - _nomad_acl_policy.changed
-      - _nomad_acl_policy.policy.Name == random_name
+      - _nomad_acl_policy.policy.Name == random_policy_name
       - _nomad_acl_policy.policy.Description == random_description
 
 - name: update nomad acl policy
@@ -33,7 +33,7 @@
   nomad_acl_policy:
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
-    name: "{{ random_name }}"
+    name: "{{ random_policy_name }}"
     description: "{{ another_random_description }}"
     rules: |
       namespace "default" {
@@ -44,7 +44,7 @@
 - ansible.builtin.assert:
     that:
       - _nomad_acl_policy.changed
-      - _nomad_acl_policy.policy.Name == random_name
+      - _nomad_acl_policy.policy.Name == random_policy_name
       - _nomad_acl_policy.policy.Description == another_random_description
 
 - name: idempotent - no change in nomad acl policy
@@ -52,7 +52,7 @@
   nomad_acl_policy:
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
-    name: "{{ random_name }}"
+    name: "{{ random_policy_name }}"
     description: "{{ another_random_description }}"
     rules: |
       namespace "default" {
@@ -63,7 +63,7 @@
 - ansible.builtin.assert:
     that:
       - not _nomad_acl_policy.changed
-      - _nomad_acl_policy.policy.Name == random_name
+      - _nomad_acl_policy.policy.Name == random_policy_name
       - _nomad_acl_policy.policy.Description == another_random_description
 
 - name: delete nomad acl policy
@@ -71,7 +71,7 @@
   nomad_acl_policy:
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
-    name: "{{ random_name }}"
+    name: "{{ random_policy_name }}"
     state: absent
 
 - ansible.builtin.assert:
@@ -83,7 +83,7 @@
   nomad_acl_policy:
     url: "{{ nomad_url }}"
     management_token: "{{ nomad_management_token }}"
-    name: "{{ random_name }}"
+    name: "{{ random_policy_name }}"
     state: absent
 
 - ansible.builtin.assert:

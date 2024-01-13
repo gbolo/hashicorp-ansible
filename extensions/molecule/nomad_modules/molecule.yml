@@ -26,6 +26,8 @@ platforms:
       - 127.0.0.1:14646:4646
 provisioner:
   name: ansible
+  options:
+    D: True
   config_options:
     defaults:
       stdout_callback: debug

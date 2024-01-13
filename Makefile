@@ -1,9 +1,9 @@
 SHELL := bash
 PR = poetry run
 
- ifeq (, $(shell which poetry))
- $(error "ERROR: poetry (python-poetry) is required. please install it and have it available in your PATH: $(PATH)")
- endif
+ifeq (, $(shell which poetry))
+	$(error "ERROR: poetry (python-poetry) is required. please install it and have it available in your PATH: $(PATH)")
+endif
 
 .PHONY: default
 default:
@@ -24,7 +24,7 @@ apply-copyright-headers: default
 .PHONY: dependency
 dependency: default
 	poetry env info
-	poetry install -n
+	poetry install -n --no-root
 
 .PHONY: list-tests
 list-tests: default

@@ -1,2 +1,77 @@
 # Copyright (c) George Bolo <gbolo@linuxctl.com>
 # SPDX-License-Identifier: MIT
+
+- set_fact:
+    random_name: "{{ 1024 | random | hash('sha1') }}"
+    random_description: "{{ 1024 | random | hash('sha1') }}"
+    another_random_description: "{{ 1024 | random | hash('sha1') }}"
+
+- name: create management token
+  register: _nomad_acl_token
+  nomad_acl_token:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    type: management
+
+- debug:
+    var: _nomad_acl_token
+
+- ansible.builtin.assert:
+    that:
+      - _nomad_acl_token.changed
+      - _nomad_acl_token.token.Name == random_name
+
+- name: shouldnt be able to create management_token token with policies
+  register: _nomad_acl_token_invalid
+  ignore_errors: true
+  nomad_acl_token:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}_fail"
+    type: management
+    policies:
+      - "{{ random_policy_name }}"
+
+- name: ensure invalid mgmt token failed
+  ansible.builtin.assert:
+    that:
+      - _nomad_acl_token_invalid.failed
+
+- name: nothing should change
+  register: _nomad_acl_token
+  nomad_acl_token:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    type: management
+
+- ansible.builtin.assert:
+    that:
+      - not _nomad_acl_token.changed
+
+- name: delete management_token token
+  register: _nomad_acl_token
+  nomad_acl_token:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    state: absent
+
+- ansible.builtin.assert:
+    that:
+      - _nomad_acl_token.changed
+
+- name: cannot create client acl token without policies
+  register: _nomad_acl_token_invalid
+  ignore_errors: true
+  nomad_acl_token:
+    url: "{{ nomad_url }}"
+    management_token: "{{ nomad_management_token }}"
+    name: "{{ random_name }}"
+    type: client
+
+- name: ensure invalid token create failed
+  ansible.builtin.assert:
+    that:
+      - _nomad_acl_token_invalid.failed
