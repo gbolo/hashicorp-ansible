@@ -34,6 +34,7 @@ URL_JOB = "{url}/v1/job/{id}?namespace={namespace}"
 URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}&namespace={namespace}"
 URL_JOB_PARSE = "{url}/v1/jobs/parse?namespace={namespace}"
 URL_JOB_PLAN = "{url}/v1/job/{id}/plan?namespace={namespace}"
+URL_JOB_SUBMISSION = "{url}/v1/job/{id}/submission?namespace={namespace}&version={version}"
 
 
 class NomadAPI(object):
@@ -322,6 +323,19 @@ class NomadAPI(object):
     def get_job(self, id):
         return self.api_request(
             url=URL_JOB.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
+            method="GET",
+            json_response=True,
+            accept_404=True,
+        )
+
+    def get_job_submission(self, id, version=1):
+        return self.api_request(
+            url=URL_JOB_SUBMISSION.format(
+                url=self.url,
+                id=id,
+                namespace=quote_plus(self.namespace),
+                version=version,
+            ),
             method="GET",
             json_response=True,
             accept_404=True,
