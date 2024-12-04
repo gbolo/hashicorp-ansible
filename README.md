@@ -92,11 +92,11 @@ cd extensions && poetry run molecule list
 WARNING  Driver docker does not provide a schema.
 INFO     Running nomad-single > list
 INFO     Running nomad_modules > list
-                 ╷             ╷                  ╷               ╷         ╷            
-  Instance Name  │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged  
-╶────────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴    
-  nomad-molecule │ docker      │ ansible          │ nomad_modules │ false   │ false      
-                 ╵             ╵                  ╵               ╵         ╵            
+                 ╷             ╷                  ╷               ╷         ╷
+  Instance Name  │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged
+╶────────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴
+  nomad-molecule │ docker      │ ansible          │ nomad_modules │ false   │ false
+                 ╵             ╵                  ╵               ╵         ╵
 
 # execute module molecule testing
 ❯ make test-nomad-modules
@@ -104,11 +104,11 @@ set -euo pipefail
 cd extensions && poetry run molecule list --scenario-name nomad_modules
 WARNING  Driver docker does not provide a schema.
 INFO     Running nomad_modules > list
-                 ╷             ╷                  ╷               ╷         ╷            
-  Instance Name  │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged  
+                 ╷             ╷                  ╷               ╷         ╷
+  Instance Name  │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged
 ╶────────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴
-  nomad-molecule │ docker      │ ansible          │ nomad_modules │ false   │ false      
-                 ╵             ╵                  ╵               ╵         ╵            
+  nomad-molecule │ docker      │ ansible          │ nomad_modules │ false   │ false
+                 ╵             ╵                  ╵               ╵         ╵
 cd extensions && poetry run molecule converge --scenario-name nomad_modules
 WARNING  Driver docker does not provide a schema.
 INFO     nomad_modules scenario test matrix: dependency, create, prepare, converge
